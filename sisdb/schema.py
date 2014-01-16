@@ -23,7 +23,7 @@ class BaseSchema(object):
         self._initialized = False
         if 'data' in kwargs:
             data = kwargs['data']
-            self._data = data
+            self.set_data(data)
         self._initialized = True
 
     def __eq__(self, other):
@@ -42,7 +42,7 @@ class BaseSchema(object):
         # clear it
         curr_id = self._data.get('_id', None)
         self._data.clear()
-        for k in data_keys.intersect(defn_keys):
+        for k in data_keys.intersection(defn_keys):
             setattr(self, k, data[k])
 
         if curr_id:
@@ -88,6 +88,7 @@ class SisSchema(BaseSchema):
                 self._data = self.endpoint.create(save_data)
 
             self._changed.clear()
+            return self
 
     def delete(self):
         if '_id' in self._data:
