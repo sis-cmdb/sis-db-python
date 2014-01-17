@@ -25,10 +25,22 @@ class Query(object):
         self.result = None
 
     def filter(self, q_obj):
+        if not q_obj:
+            return self
+
         if not self.query_obj:
             self.query_obj = { }
+
         self.query_obj.update(q_obj)
         self._clear_cached_result()
+
+        return self
+
+    def reset(self):
+        self.query_obj = None
+        self._limit = None
+        self._offset = None
+        self.result = None
         return self
 
     def limit(self, lim):
