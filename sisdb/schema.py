@@ -35,6 +35,10 @@ class BaseSchema(object):
         if 'data' in kwargs:
             data = kwargs['data']
             self.set_data(data)
+
+        if kwargs.get('from_server', False):
+            self._changed.clear()
+
         self._initialized = True
 
     def __eq__(self, other):
@@ -64,6 +68,13 @@ class BaseSchema(object):
         if curr_id:
             setattr(self, '_id', curr_id)
 
+    def _convert_value(self, val):
+        if isinstance(val, BaseSchema):
+            val = val.to_saved_dict(False)
+        elif isinstance(val, list):
+            val = map(lambda v: self._convert_value(v), val)
+        return val
+
     def to_saved_dict(self, as_root):
         if not as_root:
             return self._data.get('_id', None)
@@ -71,8 +82,7 @@ class BaseSchema(object):
         result = {}
         for k in self._changed:
             val = self._data[k]
-            if isinstance(val, BaseSchema):
-                val = val.to_saved_dict(False)
+            val = self._convert_value(val)
             result[k] = val
         return result
 
@@ -162,7 +172,10 @@ class SisSchema(BaseSchema):
 class EmbeddedSchema(BaseSchema):
     def __init__(self, root_schema, key_name, *args, **kwargs):
         super(EmbeddedSchema, self).__init__(args, kwargs)
-        self.root_schema = weakref.proxy(root_schema)
+        if isinstance(root_schema, weakref.ProxyType):
+            self.root_schema = root_schema
+        else:
+            self.root_schema = weakref.proxy(root_schema)
         self.key_name = key_name
 
     def _mark_as_changed(self, name):

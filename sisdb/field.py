@@ -135,6 +135,7 @@ class ListField(SisField):
 class ObjectIdField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):
         super(ObjectIdField, self).__init__(field_descriptor, *args, **kwargs)
+        self.sisdb = kwargs.get('sisdb')
 
     def to_sis_value(self, value):
         if type(value) == dict:
@@ -167,7 +168,7 @@ class ObjectIdField(SisField):
 
         # we have a ref.. let's see if it's an object id that needs
         # to load, a dictionary that needs to be converted, or the object itself
-        ref_cls = getattr(self.db, ref_type)
+        ref_cls = getattr(self.sisdb, ref_type)
         if not ref_cls:
             return val
 
@@ -176,8 +177,8 @@ class ObjectIdField(SisField):
             return val
         elif isinstance(val, dict):
             # convert to schema
-            val = ref_cls(data=val)
-        elif isinstance(val, str):
+            val = ref_cls(data=val, from_server=True)
+        elif isinstance(val, str) or isinstance(val, unicode):
             val = ref_cls.load(val)
 
         return val
@@ -244,7 +245,7 @@ def create_field_from_string(descriptor, name, sisdb):
         if stype not in field_types:
             raise SisFieldError('Unknown type: %s', descriptor)
 
-        result = field_types[stype]({ 'type' : stype })
+        result = field_types[stype]({ 'type' : stype }, sisdb=sisdb)
         result.name = name
         return result
 
@@ -274,6 +275,7 @@ def create_field(descriptor, name, sisdb, schema_name):
             # type.. is it a string or an object
             result = create_field_from_string(desc_type, name, sisdb)
             if result:
+                result.field_desc.update(descriptor)
                 return result
             # type is an object or list so it's an embedded schema
             result = EmbeddedSchemaField(desc_type, sisdb=sisdb, e_name=e_name)

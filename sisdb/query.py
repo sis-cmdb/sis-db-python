@@ -57,5 +57,6 @@ class Query(object):
             q['offset'] = self._offset
 
         objs = self.endpoint.list(q)
-        self.result = map(lambda o : self.cls(data=o), objs)
+        # convert to data
+        self.result = map(lambda o : self.cls(data=o, from_server=True), objs)
         return self.result
