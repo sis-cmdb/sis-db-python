@@ -113,16 +113,16 @@ class MixedField(SisField):
 class ListField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):
         super(ListField, self).__init__(field_descriptor, *args, **kwargs)
-        self._field_cls = kwargs.get('field_cls')
+        self._inner_field = kwargs.get('field_cls')
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
         vals = instance._data.get(self.name, None)
         if not vals or not isinstance(vals, list):
-            instance._data[self.name] = datastructures.BaseList([], instance, self.name)
+            instance._data[self.name] = datastructures.BaseList([], instance, self.name, self._inner_field)
         elif not isinstance(vals, datastructures.BaseList):
-            instance._data[self.name] = datastructures.BaseList(vals, instance, self.name)
+            instance._data[self.name] = datastructures.BaseList(vals, instance, self.name, self._inner_field)
 
         return instance._data[self.name]
 
@@ -145,6 +145,49 @@ class ObjectIdField(SisField):
 
         return str(value)
 
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        val = instance._data.get(self.name, None)
+        val = self.convert(val, instance)
+        instance._data[self.name] = val
+
+        return instance._data[self.name]
+
+    def convert(self, val, instance):
+        if not val:
+            # nothin
+            return val
+
+        # check if the object id is a ref..
+        ref_type = self.field_desc.get('ref', None)
+        if not ref_type:
+            # not a ref.. just return
+            return val
+
+        # we have a ref.. let's see if it's an object id that needs
+        # to load, a dictionary that needs to be converted, or the object itself
+        ref_cls = getattr(self.db, ref_type)
+        if not ref_cls:
+            return val
+
+        if isinstance(val, ref_cls):
+            # good to go
+            return val
+        elif isinstance(val, dict):
+            # convert to schema
+            val = ref_cls(data=val)
+        elif isinstance(val, str):
+            val = ref_cls.load(val)
+
+        return val
+
+    def __set__(self, instance, value):
+        if (self.name not in instance._data or
+            instance._data[self.name] != value):
+                instance._mark_as_changed(self.name)
+                instance._data[self.name] = value
+
 class EmbeddedSchemaField(SisField):
     def __init__(self, schema_desc, *args, **kwargs):
         super(EmbeddedSchemaField, self).__init__(schema_desc, *args, **kwargs)
@@ -157,24 +200,32 @@ class EmbeddedSchemaField(SisField):
         if instance is None:
             return self
 
-        vals = instance._data.get(self.name, None)
-        if not vals:
-            vals = self.schema_cls(instance, self.name)
-            instance._data[self.name] = vals
-        else:
-            if not isinstance(vals, self.schema_cls):
-                # don't mark as changed.
-                vals_dict = vals
-                vals = self.schema_cls(instance, self.name)
-                vals.set_data(vals_dict)
-
-        return vals
+        value = instance._data.get(self.name, None)
+        value = self.convert(value, instance)
+        instance._data[self.name] = value
+        return value
 
     def __set__(self, instance, value):
         if (self.name not in instance._data or
             instance._data[self.name] != value):
                 instance._mark_as_changed(self.name)
                 instance._data[self.name] = value
+
+    def convert(self, value, instance):
+        if not value:
+            value = self.schema_cls(instance, self.name)
+        else:
+            if isinstance(value, self.schema_cls):
+                return value
+
+            if isinstance(value, dict):
+                # don't mark as changed.
+                vals_dict = value
+                value = self.schema_cls(instance, self.name)
+                value.set_data(vals_dict)
+            else:
+                value = self.schema_cls(instance, self.name)
+        return value
 
 
 def create_field_from_string(descriptor, name, sisdb):
@@ -229,7 +280,13 @@ def create_field(descriptor, name, sisdb, schema_name):
 
     # array
     elif type(descriptor) == list:
-        result = ListField(descriptor, field_cls=None)
+        inner_name = '__'.join([schema_name, name])
+        inner_field = MixedField({ 'type' : 'mixed'})
+        if len(descriptor) > 0:
+            inner_field = create_field(descriptor[0], inner_name, sisdb, schema_name)
+
+        result = ListField(descriptor, field_cls=inner_field)
+
 
     if not result:
         raise SisFieldError("Unknown type: %s" % str(descriptor))

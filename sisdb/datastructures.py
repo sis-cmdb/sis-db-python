@@ -76,13 +76,19 @@ class BaseList(list):
     _instance = None
     _name = None
 
-    def __init__(self, list_items, instance, name):
+    def __init__(self, list_items, instance, name, inner_field):
         self._instance = weakref.proxy(instance)
         self._name = name
+        self._inner_field = inner_field
         return super(BaseList, self).__init__(list_items)
 
-    def __getitem__(self, *args, **kwargs):
-        value = super(BaseList, self).__getitem__(*args, **kwargs)
+    def __getitem__(self, index, *args, **kwargs):
+        value = super(BaseList, self).__getitem__(index)
+        if hasattr(self._inner_field, 'convert'):
+            new_val = self._inner_field.convert(value)
+            if type(new_val) != type(value) or new_val != value:
+                self[index] = new_val
+                value = new_val
         return value
 
     def __setitem__(self, *args, **kwargs):

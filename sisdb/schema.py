@@ -16,6 +16,7 @@ import field
 import query
 import weakref
 
+# sis fields that aren't explicit in definitions
 SIS_INTERNAL_FIELDS = {
     '_id' : 'objectid',
     '_created_at' : 'number',
@@ -39,6 +40,10 @@ class BaseSchema(object):
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self._data == other._data
+        elif isinstance(other, dict):
+            return self._data == other
+        elif isinstance(other, str):
+            return other == self._data.get('_id', None)
         else:
             return False
 
@@ -59,12 +64,15 @@ class BaseSchema(object):
         if curr_id:
             setattr(self, '_id', curr_id)
 
-    def to_saved_dict(self):
+    def to_saved_dict(self, as_root):
+        if not as_root:
+            return self._data.get('_id', None)
+
         result = {}
         for k in self._changed:
             val = self._data[k]
             if isinstance(val, BaseSchema):
-                val = val.to_saved_dict()
+                val = val.to_saved_dict(False)
             result[k] = val
         return result
 
@@ -90,7 +98,7 @@ class SisSchema(BaseSchema):
                 self._changed.clear()
                 return
 
-            save_data = self.to_saved_dict()
+            save_data = self.to_saved_dict(True)
 
             if '_id' in self._data:
                 # update
@@ -161,12 +169,12 @@ class EmbeddedSchema(BaseSchema):
         # tell the root schema that we changed
         self.root_schema._mark_as_changed(self.key_name)
 
-    def to_saved_dict(self):
+    def to_saved_dict(self, as_root):
         result = {}
         for k in self._data:
             val = self._data[k]
             if isinstance(val, BaseSchema):
-                val = val.to_saved_dict()
+                val = val.to_saved_dict(False)
             result[k] = val
         return result
 
