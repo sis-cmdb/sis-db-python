@@ -117,7 +117,7 @@ class SisSchema(BaseSchema):
                 self._data = self.endpoint.create(save_data)
 
             self._changed.clear()
-            return self
+        return self
 
     def delete(self):
         if '_id' in self._data:
