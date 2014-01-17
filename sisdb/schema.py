@@ -16,6 +16,16 @@ import field
 import query
 import weakref
 
+SIS_INTERNAL_FIELDS = {
+    '_id' : 'objectid',
+    '_created_at' : 'number',
+    '_updated_at' : 'number',
+    '_updated_by' : 'string',
+    '_created_by' : 'string'
+}
+
+SIS_INTERNAL_FIELD_NAMES = set(SIS_INTERNAL_FIELDS.keys())
+
 class BaseSchema(object):
     def __init__(self, *args, **kwargs):
         self._data = { }
@@ -37,7 +47,8 @@ class BaseSchema(object):
 
     def set_data(self, data):
         # get the definition keys
-        defn_keys = set(self.__class__.defn.keys())
+        # make defn_keys the union of the definition and the internal fields
+        defn_keys = set(self.__class__.defn.keys()) | SIS_INTERNAL_FIELD_NAMES
         data_keys = set(data.keys())
         # clear it
         curr_id = self._data.get('_id', None)
@@ -185,6 +196,8 @@ def create_schema(sisdb, schema):
     for k in defn.keys():
         attrs[k] = field.create_field(defn[k], k, sisdb, name)
 
-    # add id
-    attrs['_id'] = field.create_field('objectid', '_id', sisdb, name)
+    # add sis fields
+    for k,v in SIS_INTERNAL_FIELDS.iteritems():
+        attrs[k] = field.create_field(v, k, sisdb, name)
+
     return type(str(name), (SisSchema,), attrs)

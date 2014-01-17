@@ -130,7 +130,7 @@ class ListField(SisField):
         if (self.name not in instance._data or
             instance._data[self.name] != value):
                 instance._mark_as_changed(self.name)
-                instance._data[self.name] = self._list
+                instance._data[self.name] = value
 
 class ObjectIdField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):
