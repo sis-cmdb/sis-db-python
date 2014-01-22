@@ -34,16 +34,19 @@ class SisField(object):
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return instance._data.get(self.name, None)
+        res = instance._data.get(self.name, None)
+        if hasattr(self, 'to_sis_value'):
+            sis_res = self.to_sis_value(res)
+            if res != sis_res:
+                res = sis_res
+                instance._data[self.name] = res
+        return res
 
     def __set__(self, instance, value):
         if (self.name not in instance._data or
             instance._data[self.name] != value):
                 instance._mark_as_changed(self.name)
                 instance._data[self.name] = value
-
-    def to_sis_value(self, value):
-        return value
 
     def raise_error(self, msg):
         raise SisFieldError(msg)
@@ -136,15 +139,6 @@ class ObjectIdField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):
         super(ObjectIdField, self).__init__(field_descriptor, *args, **kwargs)
         self.sisdb = kwargs.get('sisdb')
-
-    def to_sis_value(self, value):
-        if type(value) == dict:
-            # sub doc - if inner _id isn't there, fail
-            if value.get('_id', None):
-                self.raise_error("Cannot convert to ObjectId")
-            return str(value.get('_id'))
-
-        return str(value)
 
     def __get__(self, instance, owner):
         if instance is None:
