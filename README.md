@@ -7,7 +7,7 @@ ORM like library for SIS
 
 `python setup.py install`
 
-# Exmaple code
+# Example code
 
 ```python
 
