@@ -34,6 +34,9 @@ class SisDb(object):
 
         raise AttributeError
 
+    def available_schemas(self):
+        return self._schemas.keys()
+
     def _add_schema(self, s):
         name = s['name']
         if name not in self._schemas:

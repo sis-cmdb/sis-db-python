@@ -143,15 +143,17 @@ class SisSchema(BaseSchema):
         for k in removed_keys:
             delattr(cls, k)
 
+        sisdb = cls.db
+        name = cls.descriptor['name']
         added_keys = new_keys - old_keys
         for k in added_keys:
-            setattr(cls, k, field.create_field(new_defn[k], k))
+            setattr(cls, k, field.create_field(new_defn[k], k, sisdb, name))
 
         for k in same_keys:
             curr_field = old_defn[k]
             new_field = new_defn[k]
             if new_field != curr_field:
-                setattr(cls, k, field.create_field(new_defn[k], k))
+                setattr(cls, k, field.create_field(new_defn[k], k, sisdb, name))
 
         setattr(cls, 'defn', new_defn)
 
