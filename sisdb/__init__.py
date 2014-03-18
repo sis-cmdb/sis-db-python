@@ -14,6 +14,8 @@
 
 import schema
 
+VERSION = '0.2'
+
 class SisDbError(Exception):
     def __init__(self, value):
         self.value = value
@@ -22,11 +24,11 @@ class SisDbError(Exception):
 
 class SisDb(object):
 
-    def __init__(self, client):
+    def __init__(self, client, opts=None):
         self.client = client
         self._schemas = { }
         if client is not None:
-            self.refresh()
+            self.refresh(opts)
 
     def __getattr__(self, name):
         if name in self._schemas:
@@ -53,8 +55,8 @@ class SisDb(object):
             s = self.client.schemas.create(s)
             self._schemas[name] = schema.create_schema(self, s)
 
-    def refresh(self):
-        schemas = self.client.schemas.list()
+    def refresh(self, opts=None):
+        schemas = self.client.schemas.list_all(opts)
         schema_names = set(map(lambda s : s['name'], schemas))
         my_schemas = set(self._schemas.keys())
 

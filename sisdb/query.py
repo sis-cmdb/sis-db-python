@@ -19,10 +19,12 @@ class Query(object):
         self.query_obj = None
         self._limit = None
         self._offset = None
-        self.result = None
+        self._result = None
+        self._total_count = -1
 
     def _clear_cached_result(self):
-        self.result = None
+        self._result = None
+        self._count = -1
 
     def filter(self, q_obj):
         if not q_obj:
@@ -40,7 +42,7 @@ class Query(object):
         self.query_obj = None
         self._limit = None
         self._offset = None
-        self.result = None
+        self._clear_cached_result()
         return self
 
     def limit(self, lim):
@@ -56,9 +58,20 @@ class Query(object):
     def __iter__(self):
         return iter(self.all())
 
+    def count(self):
+        if self._count != -1:
+            return self._count
+        q = { }
+        if self.query_obj:
+            q['q'] = self.query_obj
+        q['limit'] = 1
+        page = self.endpoint.list(q)
+        self._count = page['total_count']
+        return self._count
+
     def all(self):
-        if self.result:
-            return self.result
+        if self._result:
+            return self._result
 
         q = { }
         if self.query_obj:
@@ -68,7 +81,9 @@ class Query(object):
         if self._offset:
             q['offset'] = self._offset
 
-        objs = self.endpoint.list(q)
+        page = self.endpoint.list(q)
+        objs = page['results']
+        self._count = page['total_count']
         # convert to data
-        self.result = map(lambda o : self.cls(data=o, from_server=True), objs)
-        return self.result
+        self._result = map(lambda o : self.cls(data=o, from_server=True), objs)
+        return self._result
