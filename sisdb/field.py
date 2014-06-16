@@ -237,7 +237,7 @@ def create_field_from_string(descriptor, name, sisdb):
         type(descriptor) == str):
         stype = str(descriptor).lower()
         if stype not in field_types:
-            raise SisFieldError('Unknown type: %s', descriptor)
+            raise SisFieldError('Unknown type: %s Field: %s' % (descriptor, name))
 
         result = field_types[stype]({ 'type' : stype }, sisdb=sisdb)
         result.name = name
