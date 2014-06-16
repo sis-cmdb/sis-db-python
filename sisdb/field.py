@@ -65,6 +65,16 @@ class BooleanField(SisField):
             return False
         self.raise_error("Cannot convert to Boolean")
 
+class DateField(SisField):
+    def __init__(self, field_descriptor, *args, **kwargs):
+        super(DateField, self).__init__(field_descriptor, *args, **kwargs)
+
+    def to_sis_value(self, value):
+        if value is None:
+            return value
+
+        return str(value)
+        
 class NumberField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):
         super(NumberField, self).__init__(field_descriptor, *args, **kwargs)
@@ -230,7 +240,8 @@ def create_field_from_string(descriptor, name, sisdb):
         'string' : StringField,
         'objectid' : ObjectIdField,
         'ipaddress' : MixedField,
-        'mixed' : MixedField
+        'mixed' : MixedField,
+        'date' : DateField,
     }
 
     if (type(descriptor) == unicode or
