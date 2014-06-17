@@ -26,14 +26,19 @@ class Query(object):
         self._result = None
         self._count = -1
 
-    def filter(self, q_obj):
-        if not q_obj:
+    def filter(self, q_obj=None, **kwargs):
+        if not q_obj and not kwargs:
             return self
 
         if not self.query_obj:
             self.query_obj = { }
 
-        self.query_obj.update(q_obj)
+        if q_obj:
+            self.query_obj.update(q_obj)
+
+        if kwargs:
+            self.query_obj.update(kwargs)
+
         self._clear_cached_result()
 
         return self

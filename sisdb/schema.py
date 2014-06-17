@@ -127,6 +127,23 @@ class SisSchema(BaseSchema):
         self._changed.clear()
 
     @classmethod
+    def get(cls, q_obj=None, **kwargs):
+        query = cls.objects()
+        query_obj = { }
+        if q_obj:
+            query_obj.update(q_obj)
+        if kwargs:
+            query_obj.update(kwargs)
+        print query_obj
+        if len(query_obj) == 0:
+            return None
+        query.filter(query_obj).limit(1)
+        result = query.all()
+        if query.count() != 1:
+            return None
+        return result[0]
+
+    @classmethod
     def load(cls, elem_id):
         return cls(data=cls.db.client.entities(cls.descriptor['name']).get(elem_id))
 
