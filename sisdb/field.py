@@ -14,6 +14,7 @@
 
 import schema
 import datastructures
+import datetime
 
 class SisFieldError(Exception):
     def __init__(self, value, *args, **kwargs):
@@ -72,9 +73,19 @@ class DateField(SisField):
     def to_sis_value(self, value):
         if value is None:
             return value
+        if (type(value) == datetime.datetime):
+            return value
+        if (type(value) in [str, unicode]):
+            # parse to datetime
+            try:
+                value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
+                return value
+            except:
+                print "value : " + str(type(value))
+                print 'error parsing ' + str(value)
+                pass
+        self.raise_error("Cannot convert to date")
 
-        return str(value)
-        
 class NumberField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):
         super(NumberField, self).__init__(field_descriptor, *args, **kwargs)

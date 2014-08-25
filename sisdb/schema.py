@@ -15,6 +15,7 @@
 import field
 import query
 import weakref
+import datetime
 
 # sis fields that aren't explicit in definitions
 SIS_INTERNAL_FIELDS = {
@@ -73,6 +74,9 @@ class BaseSchema(object):
             val = val.to_saved_dict(False)
         elif isinstance(val, list):
             val = map(lambda v: self._convert_value(v), val)
+        elif (isinstance(val, datetime.datetime) or
+              isinstance(val, datetime.date)):
+            val = val.isoformat()
         return val
 
     def to_saved_dict(self, as_root):
