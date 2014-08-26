@@ -20,11 +20,13 @@ class Query(object):
         self._limit = None
         self._offset = None
         self._result = None
-        self._total_count = -1
+        self._count = -1
+        self._is_all = False
 
     def _clear_cached_result(self):
         self._result = None
         self._count = -1
+        self._is_all = False
 
     def filter(self, q_obj=None, **kwargs):
         if not q_obj and not kwargs:
@@ -61,7 +63,7 @@ class Query(object):
         return self;
 
     def __iter__(self):
-        return iter(self.all())
+        return iter(self.all_items())
 
     def count(self):
         if self._count != -1:
@@ -74,9 +76,34 @@ class Query(object):
         self._count = page['total_count']
         return self._count
 
-    def all(self):
-        if self._result:
+    def all_items(self):
+        if self._result and self._is_all:
             return self._result
+
+        q = { }
+        if self.query_obj:
+            q['q'] = self.query_obj
+
+        items = self.endpoint.list_all(q)
+        self._is_all = True
+        self._count = len(items)
+        self._result = map(lambda o : self.cls(data=o, from_server=True), items)
+        return self._result
+
+    def bulk_delete(self, query):
+        res = self.endpoint.delete_bulk(query)
+        self._clear_cached_result()
+        return res
+
+    def page(self):
+        if self._result:
+            if self._is_all:
+                # slice
+                limit = 200 if self._limit is None else self._limit
+                offset = 0 if self._offset is None else self._offset
+                return self._result[offset:limit + offset]
+            else:
+                return self._result
 
         q = { }
         if self.query_obj:
