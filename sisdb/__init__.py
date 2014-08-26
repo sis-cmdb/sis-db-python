@@ -14,7 +14,7 @@
 
 import schema
 
-VERSION = '0.2'
+VERSION = '0.3'
 
 class SisDbError(Exception):
     def __init__(self, value):
@@ -66,4 +66,3 @@ class SisDb(object):
 
         for s in schemas:
             self._add_schema(s)
-

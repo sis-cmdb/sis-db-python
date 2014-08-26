@@ -149,11 +149,33 @@ class SisSchema(BaseSchema):
 
     @classmethod
     def load(cls, elem_id):
-        return cls(data=cls.db.client.entities(cls.descriptor['name']).get(elem_id))
+        return cls(data=cls.db.client.entities(cls.descriptor['name'],
+                   from_server=True).get(elem_id))
 
     @classmethod
     def objects(cls):
         return query.Query(cls.db.client.entities(cls.descriptor['name']), cls)
+
+    @classmethod
+    def bulk_delete(cls, items):
+        # build the $in query
+        ids = map(lambda i: i._id, items)
+        if len(ids) == 0:
+            return (0, [])
+
+        endpoint = cls.db.client.entities(cls.descriptor['name'])
+        res = endpoint.delete_bulk({ 'q' : { '_id' : { '$in' : ids }}})
+        return (len(res['success']), res['errors'])
+
+    @classmethod
+    def bulk_create(cls, items):
+        if not isinstance(items, list):
+            items = [items]
+        items = map(lambda i: i.to_saved_dict(True), items)
+        endpoint = cls.db.client.entities(cls.descriptor['name'])
+        res = endpoint.create(items)
+        created = map(lambda x: cls(data=x, from_server=True), res['success'])
+        return created
 
     @classmethod
     def _update_defn(cls, old_defn, new_defn):
