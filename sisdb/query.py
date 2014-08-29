@@ -24,7 +24,7 @@ class Query(object):
         self.endpoint = endpoint
         self.cls = cls
         self.query_obj = None
-        self.sort_obj = None
+        self.sort_list = None
         self._limit = None
         self._offset = None
         self._result = None
@@ -53,20 +53,25 @@ class Query(object):
 
         return self
 
-    def sort(self, sort_by=None, **kwargs):
-        if not sort_by and not kwargs:
+    # pass in a string 'name' or '-name'
+    # or pass in a list ['name','site']
+    def sort(self, sort):
+        if not sort:
             return self
 
-        if not self.sort_obj:
-            self.sort_obj = { }
+        if type(sort) != list:
+            sort = [sort]
+        elif len(sort) == 0:
+            return self
 
-        if sort_by:
-            self.sort_obj.update(sort_by)
+        if not self.sort_list:
+            self.sort_list = []
 
-        if kwargs:
-            self.sort_obj.update(kwargs)
+        self.sort = self.sort + sort
 
-        return self 
+        self._clear_cached_result()
+
+        return self
 
     def reset(self):
         self.query_obj = None
@@ -107,8 +112,8 @@ class Query(object):
         if self.query_obj:
             q['q'] = self.query_obj
 
-        if self.sort_obj:
-            q['s'] = self.sort_obj
+        if self.sort_list:
+            q['sort'] = ','.join(self.sort_list)
 
         items = self.endpoint.list_all(q)
         self._is_all = True
@@ -151,8 +156,8 @@ class Query(object):
         q = { }
         if self.query_obj:
             q['q'] = self.query_obj
-        if self.sort_obj:
-            q['s'] = self.sort_obj
+        if self.sort_list:
+            q['sort'] = ','.join(self.sort_list)
         if self._limit:
             q['limit'] = self._limit
         if self._offset:
