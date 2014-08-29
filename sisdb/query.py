@@ -67,7 +67,7 @@ class Query(object):
         if not self.sort_list:
             self.sort_list = []
 
-        self.sort = self.sort + sort
+        self.sort_list = self.sort_list + sort
 
         self._clear_cached_result()
 
