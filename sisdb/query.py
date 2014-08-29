@@ -24,6 +24,7 @@ class Query(object):
         self.endpoint = endpoint
         self.cls = cls
         self.query_obj = None
+        self.sort_obj = None
         self._limit = None
         self._offset = None
         self._result = None
@@ -51,6 +52,21 @@ class Query(object):
         self._clear_cached_result()
 
         return self
+
+    def sort(self, sort_by=None, **kwargs):
+        if not sort_by and not kwargs:
+            return self
+
+        if not self.sort_obj:
+            self.sort_obj = { }
+
+        if sort_by:
+            self.sort_obj.update(sort_by)
+
+        if kwargs:
+            self.sort_obj.update(kwargs)
+
+        return self 
 
     def reset(self):
         self.query_obj = None
@@ -91,6 +107,9 @@ class Query(object):
         if self.query_obj:
             q['q'] = self.query_obj
 
+        if self.sort_obj:
+            q['s'] = self.sort_obj
+
         items = self.endpoint.list_all(q)
         self._is_all = True
         self._count = len(items)
@@ -109,6 +128,7 @@ class Query(object):
         q = { }
         if self.query_obj:
             q['q'] = self.query_obj
+
         q['limit'] = 1
 
         data = self.endpoint.list(q)
@@ -131,6 +151,8 @@ class Query(object):
         q = { }
         if self.query_obj:
             q['q'] = self.query_obj
+        if self.sort_obj:
+            q['s'] = self.sort_obj
         if self._limit:
             q['limit'] = self._limit
         if self._offset:
