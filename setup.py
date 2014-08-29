@@ -4,9 +4,8 @@ import sisdb
 
 setup (
     name='sisdb',
-    version='0.1',
+    version=sisdb.VERSION,
     description='SIS ORM like library',
     packages=['sisdb'],
     install_requires=['sis >= 0.4']
 )
-

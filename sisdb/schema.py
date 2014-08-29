@@ -18,12 +18,15 @@ import weakref
 import datetime
 
 # sis fields that aren't explicit in definitions
+# TODO: fix this - add an API call to SIS to fetch
+# this list
 SIS_INTERNAL_FIELDS = {
     '_id' : 'objectid',
     '_created_at' : 'number',
     '_updated_at' : 'number',
     '_updated_by' : 'string',
-    '_created_by' : 'string'
+    '_created_by' : 'string',
+    'sis_tags' : ['string']
 }
 
 SIS_INTERNAL_FIELD_NAMES = set(SIS_INTERNAL_FIELDS.keys())
@@ -156,6 +159,13 @@ class SisSchema(BaseSchema):
     def objects(cls):
         return query.Query(cls.db.client.entities(cls.descriptor['name']), cls)
 
+    # from http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python
+    def chunks(l, n):
+        """ Yield successive n-sized chunks from l.
+        """
+        for i in xrange(0, len(l), n):
+            yield l[i:i+n]
+
     @classmethod
     def bulk_delete(cls, items):
         # build the $in query
@@ -163,9 +173,18 @@ class SisSchema(BaseSchema):
         if len(ids) == 0:
             return (0, [])
 
-        endpoint = cls.db.client.entities(cls.descriptor['name'])
-        res = endpoint.delete_bulk({ 'q' : { '_id' : { '$in' : ids }}})
-        return (len(res['success']), res['errors'])
+        errors = []
+        num_deleted = 0
+
+        # delete 50 at a time - TODO make this not be awful
+        parts = chunks(ids, 50)
+        for p in parts:
+            endpoint = cls.db.client.entities(cls.descriptor['name'])
+            res = endpoint.delete_bulk({ 'q' : { '_id' : { '$in' : p }}})
+            num_deleted += len(res['success'])
+            errors += res['errors']
+
+        return (num_deleted, errors)
 
     @classmethod
     def bulk_create(cls, items):

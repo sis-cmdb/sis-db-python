@@ -12,6 +12,13 @@
 # Copyright (c) 2012-2013 VeriSign, Inc. All rights reserved.
 #############################################################
 
+class SisQueryError(Exception):
+    def __init__(self, value, *args, **kwargs):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
 class Query(object):
     def __init__(self, endpoint, cls):
         self.endpoint = endpoint
@@ -94,6 +101,22 @@ class Query(object):
         res = self.endpoint.delete_bulk(query)
         self._clear_cached_result()
         return res
+
+    def find_one(self, query=None):
+        if query:
+            self.filter(q_obj=query)
+
+        q = { }
+        if self.query_obj:
+            q['q'] = self.query_obj
+        q['limit'] = 1
+
+        data = self.endpoint.list(q)
+        count = data['total_count']
+        if count != 1:
+            raise SisQueryError("find_one has {count} results".format(count=count))
+        item = data['results'][0]
+        return self.cls(data=item, from_server=True)
 
     def page(self):
         if self._result:
