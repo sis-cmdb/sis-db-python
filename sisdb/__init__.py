@@ -56,7 +56,7 @@ class SisDb(object):
             self._schemas[name] = schema.create_schema(self, s)
 
     def refresh(self, opts=None):
-        schemas = self.client.schemas.list_all(opts)
+        schemas = self.client.schemas.fetch_all(opts)
         schema_names = set(map(lambda s : s['name'], schemas))
         my_schemas = set(self._schemas.keys())
 

@@ -115,7 +115,7 @@ class Query(object):
         if self.sort_list:
             q['sort'] = ','.join(self.sort_list)
 
-        items = self.endpoint.list_all(q)
+        items = self.endpoint.fetch_all(q)
         self._is_all = True
         self._count = len(items)
         self._result = map(lambda o : self.cls(data=o, from_server=True), items)
