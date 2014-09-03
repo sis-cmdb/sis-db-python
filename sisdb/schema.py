@@ -141,7 +141,7 @@ class SisSchema(BaseSchema):
             query_obj.update(q_obj)
         if kwargs:
             query_obj.update(kwargs)
-        print query_obj
+        #print query_obj
         if len(query_obj) == 0:
             return None
         query.filter(query_obj).limit(1)
