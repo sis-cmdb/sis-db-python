@@ -145,7 +145,7 @@ class SisSchema(BaseSchema):
         if len(query_obj) == 0:
             return None
         query.filter(query_obj).limit(1)
-        result = query.all()
+        result = query.all_items()
         if query.count() != 1:
             return None
         return result[0]
@@ -158,6 +158,10 @@ class SisSchema(BaseSchema):
     @classmethod
     def objects(cls):
         return query.Query(cls.db.client.entities(cls.descriptor['name']), cls)
+
+    @classmethod
+    def find_one(cls, q):
+        return query.Query(cls.db.client.entities(cls.descriptor['name']), cls).find_one(q)
 
     # from http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python
     def chunks(l, n):
