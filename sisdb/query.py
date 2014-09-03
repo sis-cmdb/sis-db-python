@@ -136,11 +136,15 @@ class Query(object):
 
         q['limit'] = 1
 
-        data = self.endpoint.list(q)
+        data = self.endpoint.fetch_page(q)
         count = data['total_count']
-        if count != 1:
+        if count > 1:
             raise SisQueryError("find_one has {count} results".format(count=count))
-        item = data['results'][0]
+        elif count == 0:
+            item = dict()
+        else:
+            item = data['results'][0]
+
         return self.cls(data=item, from_server=True)
 
     def page(self):
