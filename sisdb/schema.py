@@ -262,8 +262,9 @@ def create_embedded_schema(sisdb, defn, name):
         'defn' : defn
     }
 
-    for k in defn.keys():
-        attrs[k] = field.create_field(defn[k], k, sisdb, name)
+    if type(defn) == dict:
+        for k in defn.keys():
+            attrs[k] = field.create_field(defn[k], k, sisdb, name)
 
     return type(str(name), (EmbeddedSchema,), attrs)
 
