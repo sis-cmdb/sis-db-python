@@ -146,8 +146,14 @@ class ListField(SisField):
         if not vals or not isinstance(vals, list):
             instance._data[self.name] = datastructures.BaseList([], instance, self.name, self._inner_field)
         elif not isinstance(vals, datastructures.BaseList):
+            # ensure vals are the right kind of type
+            def convert_value(val):
+                if hasattr(self._inner_field, 'convert'):
+                    return self._inner_field.convert(val, instance)
+                return val
+            vals = map(convert_value, vals)
             instance._data[self.name] = datastructures.BaseList(vals, instance, self.name, self._inner_field)
-
+        
         return instance._data[self.name]
 
     def __set__(self, instance, value):
