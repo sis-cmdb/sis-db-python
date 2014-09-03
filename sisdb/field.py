@@ -293,8 +293,18 @@ def create_field(descriptor, name, sisdb, schema_name):
             if result:
                 result.field_desc.update(descriptor)
                 return result
-            # type is an object or list so it's an embedded schema
-            result = EmbeddedSchemaField(desc_type, sisdb=sisdb, e_name=e_name)
+            
+            # type is an object or list
+            if type(desc_type) == list:
+                inner_name = '__'.join([schema_name, name])
+                inner_field = MixedField({ 'type' : 'mixed'})
+                if len(desc_type) > 0:
+                    inner_field = create_field(desc_type[0], inner_name, sisdb, schema_name)
+
+                result = ListField(desc_type, field_cls=inner_field)
+            else:
+                # treat it as an embedded schema
+                result = EmbeddedSchemaField(desc_type, sisdb=sisdb, e_name=e_name)
 
     # array
     elif type(descriptor) == list:

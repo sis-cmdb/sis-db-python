@@ -14,7 +14,7 @@
 
 import schema
 
-VERSION = '0.4'
+VERSION = '0.5'
 
 class SisDbError(Exception):
     def __init__(self, value):
