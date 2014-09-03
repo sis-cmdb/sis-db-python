@@ -141,7 +141,7 @@ class Query(object):
         if count > 1:
             raise SisQueryError("find_one has {count} results".format(count=count))
         elif count == 0:
-            item = dict()
+            return None 
         else:
             item = data['results'][0]
 
