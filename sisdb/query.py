@@ -100,7 +100,7 @@ class Query(object):
         if self.query_obj:
             q['q'] = self.query_obj
         q['limit'] = 1
-        page = self.endpoint.list(q)
+        page = self.endpoint.fetch_all(q)
         self._count = page['total_count']
         return self._count
 
@@ -115,7 +115,7 @@ class Query(object):
         if self.sort_list:
             q['sort'] = ','.join(self.sort_list)
 
-        items = self.endpoint.list_all(q)
+        items = self.endpoint.fetch_all(q)
         self._is_all = True
         self._count = len(items)
         self._result = map(lambda o : self.cls(data=o, from_server=True), items)
@@ -136,11 +136,15 @@ class Query(object):
 
         q['limit'] = 1
 
-        data = self.endpoint.list(q)
+        data = self.endpoint.fetch_page(q)
         count = data['total_count']
-        if count != 1:
+        if count > 1:
             raise SisQueryError("find_one has {count} results".format(count=count))
-        item = data['results'][0]
+        elif count == 0:
+            item = dict()
+        else:
+            item = data['results'][0]
+
         return self.cls(data=item, from_server=True)
 
     def page(self):
@@ -163,7 +167,7 @@ class Query(object):
         if self._offset:
             q['offset'] = self._offset
 
-        page = self.endpoint.list(q)
+        page = self.endpoint.fetch_page(q)
         objs = page['results']
         self._count = page['total_count']
         # convert to data
