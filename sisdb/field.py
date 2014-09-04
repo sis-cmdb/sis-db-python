@@ -139,28 +139,33 @@ class ListField(SisField):
         super(ListField, self).__init__(field_descriptor, *args, **kwargs)
         self._inner_field = kwargs.get('field_cls')
 
-    def __get__(self, instance, owner):
-        if instance is None:
-            return self
-        vals = instance._data.get(self.name, None)
-        if not vals or not isinstance(vals, list):
-            instance._data[self.name] = datastructures.BaseList([], instance, self.name, self._inner_field)
-        elif not isinstance(vals, datastructures.BaseList):
+    def convert(self, listvalue, instance):
+        if not listvalue or not isinstance(listvalue, list):
+            return datastructures.BaseList([], instance, self.name, self._inner_field)
+        elif not isinstance(listvalue, datastructures.BaseList):
             # ensure vals are the right kind of type
             def convert_value(val):
                 if hasattr(self._inner_field, 'convert'):
                     return self._inner_field.convert(val, instance)
                 return val
-            vals = map(convert_value, vals)
-            instance._data[self.name] = datastructures.BaseList(vals, instance, self.name, self._inner_field)
+            listvalue = map(convert_value, listvalue)
+            return datastructures.BaseList(listvalue, instance, self.name, self._inner_field)
+        else:
+            return listvalue
 
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        listvalue = instance._data.get(self.name, None)
+        listvalue = self.convert(listvalue, instance)
+        instance._data[self.name] = listvalue
         return instance._data[self.name]
 
     def __set__(self, instance, value):
         if (self.name not in instance._data or
             instance._data[self.name] != value):
                 instance._mark_as_changed(self.name)
-                instance._data[self.name] = value
+                instance._data[self.name] = self.convert(value, instance)
 
 class ObjectIdField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):

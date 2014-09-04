@@ -88,9 +88,25 @@ class BaseSchema(object):
 
         result = {}
         for k in self._changed:
-            val = self._data[k]
-            val = self._convert_value(val)
-            result[k] = val
+            if k in self._data:
+                val = self._data[k]
+                val = self._convert_value(val)
+                result[k] = val
+            else:
+                # could be an embedded obj
+                splits = k.split('__')
+                if len(splits) > 1:
+                    k = splits[1]
+                    if k in self._data:
+                        val = self._data[k]
+                        val = self._convert_value(val)
+                        result[k] = val
+                    else:
+                        # log error
+                        pass
+                else:
+                    # log error
+                    pass
         return result
 
     @classmethod
@@ -152,8 +168,7 @@ class SisSchema(BaseSchema):
 
     @classmethod
     def load(cls, elem_id):
-        return cls(data=cls.db.client.entities(cls.descriptor['name'],
-                   from_server=True).get(elem_id))
+        return cls(data=cls.db.client.entities(cls.descriptor['name']).get(elem_id), from_server=True)
 
     @classmethod
     def objects(cls):
@@ -254,8 +269,7 @@ class EmbeddedSchema(BaseSchema):
         result = {}
         for k in self._data:
             val = self._data[k]
-            if isinstance(val, BaseSchema):
-                val = val.to_saved_dict(False)
+            val = self._convert_value(val)
             result[k] = val
         return result
 
