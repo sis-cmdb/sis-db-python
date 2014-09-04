@@ -88,6 +88,21 @@ class BaseList(list):
         self._inner_field = inner_field
         return super(BaseList, self).__init__(list_items)
 
+    def __contains__(self, item):
+        res = super(BaseList, self).__contains__(item)
+        if res:
+            return res
+        num_items = len(self)
+        for i in range(0, num_items):
+            v = self[i]
+            if v == item:
+                return True
+            if hasattr(self._inner_field, 'equals'):
+                res = self._inner_field.equals(v, item)
+                if res:
+                    return True
+        return False
+
     def __getitem__(self, index, *args, **kwargs):
         value = super(BaseList, self).__getitem__(index)
         if hasattr(self._inner_field, 'convert'):

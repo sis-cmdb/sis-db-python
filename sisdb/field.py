@@ -153,7 +153,7 @@ class ListField(SisField):
                 return val
             vals = map(convert_value, vals)
             instance._data[self.name] = datastructures.BaseList(vals, instance, self.name, self._inner_field)
-        
+
         return instance._data[self.name]
 
     def __set__(self, instance, value):
@@ -175,6 +175,21 @@ class ObjectIdField(SisField):
         instance._data[self.name] = val
 
         return instance._data[self.name]
+
+    def to_str(self, value):
+        if isinstance(value, str) or isinstance(value, unicode):
+            return str(value)
+        if isinstance(value, dict):
+            return value.get('_id', None)
+        if hasattr(value, '_id'):
+            return value._id
+        return value
+
+    def equals(self, o1, o2):
+        if o1 == o2:
+            return True
+        # get ids
+        return self.to_str(o1) == self.to_str(o2)
 
     def convert(self, val, instance):
         if not val:
@@ -299,7 +314,7 @@ def create_field(descriptor, name, sisdb, schema_name):
             if result:
                 result.field_desc.update(descriptor)
                 return result
-            
+
             # type is an object or list
             if type(desc_type) == list:
                 inner_name = '__'.join([schema_name, name])
@@ -327,5 +342,3 @@ def create_field(descriptor, name, sisdb, schema_name):
 
     result.name = name
     return result
-
-
