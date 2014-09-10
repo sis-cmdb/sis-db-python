@@ -100,8 +100,8 @@ class Query(object):
         if self.query_obj:
             q['q'] = self.query_obj
         q['limit'] = 1
-        page = self.endpoint.fetch_all(q)
-        self._count = page['total_count']
+        page = self.endpoint.fetch_page(q)
+        self._count = page._meta.total_count
         return self._count
 
     def all_items(self):
@@ -137,13 +137,13 @@ class Query(object):
         q['limit'] = 1
 
         data = self.endpoint.fetch_page(q)
-        count = data['total_count']
+        count = data._meta.total_count
         if count > 1:
             raise SisQueryError("find_one has {count} results".format(count=count))
         elif count == 0:
-            return None 
+            return None
         else:
-            item = data['results'][0]
+            item = data[0]
 
         return self.cls(data=item, from_server=True)
 
@@ -167,9 +167,8 @@ class Query(object):
         if self._offset:
             q['offset'] = self._offset
 
-        page = self.endpoint.fetch_page(q)
-        objs = page['results']
-        self._count = page['total_count']
+        resp = self.endpoint.fetch_page(q)
+        self._count = resp._meta.total_count
         # convert to data
-        self._result = map(lambda o : self.cls(data=o, from_server=True), objs)
+        self._result = map(lambda o : self.cls(data=o, from_server=True), resp)
         return self._result

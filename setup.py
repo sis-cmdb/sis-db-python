@@ -7,5 +7,5 @@ setup (
     version=sisdb.VERSION,
     description='SIS ORM like library',
     packages=['sisdb'],
-    install_requires=['sis >= 0.4']
+    install_requires=['sis >= 0.3.0']
 )
