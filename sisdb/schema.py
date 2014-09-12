@@ -62,7 +62,8 @@ class BaseSchema(object):
         # get the definition keys
         # make defn_keys the union of the definition and the internal fields
         defn_keys = set(self.__class__.defn.keys()) | SIS_INTERNAL_FIELD_NAMES
-        data_keys = set(data.keys())
+        data_keys = set([x for x in data])
+        
         # clear it
         curr_id = self._data.get('_id', None)
         self._data.clear()
