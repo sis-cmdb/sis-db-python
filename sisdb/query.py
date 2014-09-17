@@ -137,7 +137,7 @@ class Query(object):
         q['limit'] = 1
 
         data = self.endpoint.fetch_page(q)
-        count = data._meta.total_count
+        count = len(data)
         if count > 1:
             raise SisQueryError("find_one has {count} results".format(count=count))
         elif count == 0:
