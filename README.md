@@ -100,7 +100,7 @@ for s in samples:
     print s.requiredField
 
 # or get as a list of objects
-samples = samples.all()
+samples = samples.all_items()
 
 ```
 
