@@ -145,7 +145,9 @@ class ListField(SisField):
         elif not isinstance(listvalue, datastructures.BaseList):
             # ensure vals are the right kind of type
             def convert_value(val):
-                if hasattr(self._inner_field, 'convert'):
+                if hasattr(self._inner_field, 'convertLazy'):
+                    return self._inner_field.convertLazy(val, instance)
+                elif hasattr(self._inner_field, 'convert'):
                     return self._inner_field.convert(val, instance)
                 return val
             listvalue = map(convert_value, listvalue)
@@ -197,6 +199,12 @@ class ObjectIdField(SisField):
         return self.to_str(o1) == self.to_str(o2)
 
     def convert(self, val, instance):
+        return self._convertHelper(val, instance, False)
+
+    def convertLazy(self, val, instance):
+        return self._convertHelper(val, instance, True)
+
+    def _convertHelper(self, val, instance, lazy):
         if not val:
             # nothin
             return val
@@ -220,7 +228,8 @@ class ObjectIdField(SisField):
             # convert to schema
             val = ref_cls(data=val, from_server=True)
         elif isinstance(val, str) or isinstance(val, unicode):
-            val = ref_cls.load(val)
+            if not lazy:
+                val = ref_cls.load(val)
 
         return val
 
