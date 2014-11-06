@@ -11,12 +11,12 @@ ORM like library for SIS
 
 ```python
 
-import sis
+import sispy
 import sisdb
 
 # Create an instance of sisdb that uses a SIS client pointing
 # to localhost
-db = sisdb.SisDb(sis.Client(url='http://localhost:3000'))
+db = sisdb.SisDb(sispy.Client(url='http://localhost:3000'))
 
 # Schemas are automatically pulled down.  Assuming we have a 'sample' schema with the following JSON:
 
