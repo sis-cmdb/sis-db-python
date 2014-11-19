@@ -81,8 +81,8 @@ class DateField(SisField):
                 value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%fZ')
                 return value
             except:
-                print "value : " + str(type(value))
-                print 'error parsing ' + str(value)
+                print "value : " + unicode(type(value))
+                print 'error parsing ' + unicode(value)
                 pass
         self.raise_error("Cannot convert to date")
 
@@ -111,7 +111,7 @@ class StringField(SisField):
     def to_sis_value(self, value):
         if value is None:
             return value
-        return str(value)
+        return unicode(value)
 
 class MixedField(SisField):
     def __init__(self, field_descriptor, *args, **kwargs):
@@ -185,7 +185,7 @@ class ObjectIdField(SisField):
 
     def to_str(self, value):
         if isinstance(value, str) or isinstance(value, unicode):
-            return str(value)
+            return unicode(value)
         if isinstance(value, dict):
             return value.get('_id', None)
         if hasattr(value, '_id'):
@@ -292,7 +292,7 @@ def create_field_from_string(descriptor, name, sisdb):
 
     if (type(descriptor) == unicode or
         type(descriptor) == str):
-        stype = str(descriptor).lower()
+        stype = unicode(descriptor).lower()
         if stype not in field_types:
             raise SisFieldError('Unknown type: %s Field: %s' % (descriptor, name))
 
@@ -352,7 +352,7 @@ def create_field(descriptor, name, sisdb, schema_name):
 
 
     if not result:
-        raise SisFieldError("Unknown type: %s" % str(descriptor))
+        raise SisFieldError("Unknown type: %s" % unicode(descriptor))
 
     result.name = name
     return result

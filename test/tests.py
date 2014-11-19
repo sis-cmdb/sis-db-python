@@ -1,11 +1,11 @@
 import unittest
-import sis
+import sispy
 import sisdb
 
 class TestSisDb(unittest.TestCase):
 
     def setUp(self):
-        self.client = sis.Client(url='http://localhost:3000')
+        self.client = sispy.Client(url='http://localhost:3000')
         self.client.authenticate('test', 'abc123')
         self.db = sisdb.SisDb(self.client)
 
