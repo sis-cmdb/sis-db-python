@@ -338,8 +338,14 @@ def create_field(descriptor, name, sisdb, schema_name):
 
                 result = ListField(desc_type, field_cls=inner_field)
             else:
-                # treat it as an embedded schema
-                result = EmbeddedSchemaField(desc_type, sisdb=sisdb, e_name=e_name)
+                # desc_type could actually be the descriptor of a field named
+                # type.  yes. pain.
+                inner_type = desc_type.get('type', None)
+                if type(inner_type) == str or type(inner_type) == unicode:
+                    result = EmbeddedSchemaField(descriptor, sisdb=sisdb, e_name=e_name)
+                else:
+                    # treat desc_type as an embedded schema
+                    result = EmbeddedSchemaField(desc_type, sisdb=sisdb, e_name=e_name)
 
     # array
     elif type(descriptor) == list:
