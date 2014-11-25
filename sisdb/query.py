@@ -93,8 +93,11 @@ class Query(object):
     def __iter__(self):
         return iter(self.all_items())
 
+    def __len__(self):
+        return self.count()
+
     def __getitem__(self, x):
-        if self._count < x:
+        if self.__len__() < x:
             raise IndexError("Index out of range")
         return self.all_items()[x] 
 
