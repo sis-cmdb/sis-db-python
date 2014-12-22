@@ -16,17 +16,21 @@ import field
 import query
 import weakref
 import datetime
+import copy
 
 # sis fields that aren't explicit in definitions
 # TODO: fix this - add an API call to SIS to fetch
 # this list
 SIS_INTERNAL_FIELDS = {
     '_id' : 'objectid',
-    '_created_at' : 'number',
-    '_updated_at' : 'number',
-    '_updated_by' : 'string',
-    '_created_by' : 'string',
-    'sis_tags' : ['string']
+    '_sis' : {
+        '_created_at' : 'number',
+        '_updated_at' : 'number',
+        '_updated_by' : 'string',
+        '_created_by' : 'string',
+        'owner' : ['string'],
+        'tags' : ['string']
+    }
 }
 
 SIS_INTERNAL_FIELD_NAMES = set(SIS_INTERNAL_FIELDS.keys())
@@ -63,7 +67,7 @@ class BaseSchema(object):
         # make defn_keys the union of the definition and the internal fields
         defn_keys = set(self.__class__.defn.keys()) | SIS_INTERNAL_FIELD_NAMES
         data_keys = set([x for x in data])
-        
+
         # clear it
         curr_id = self._data.get('_id', None)
         self._data.clear()
@@ -72,6 +76,15 @@ class BaseSchema(object):
 
         if curr_id:
             setattr(self, '_id', curr_id)
+
+    def clone(self):
+        cloned_dict = copy.deepcopy(self._data)
+        cloned_dict.pop('_id', None)
+        if '_sis' in cloned_dict:
+            for key in cloned_dict['_sis'].keys():
+                    if key[0] == '_':
+                        cloned_dict['_sis'].pop(key)
+        return self.__class__(data=cloned_dict)
 
     def _convert_value(self, val):
         if isinstance(val, BaseSchema):

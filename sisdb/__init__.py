@@ -26,6 +26,8 @@ class SisDb(object):
 
     def __init__(self, client, opts=None):
         self.client = client
+        if self.client.version < 1.1:
+            self.client.version = 1.1
         self._schemas = { }
         if client is not None:
             self.refresh(opts)
