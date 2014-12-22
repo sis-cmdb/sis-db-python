@@ -14,7 +14,7 @@
 
 import schema
 
-VERSION = '0.7.0'
+VERSION = '0.7.1'
 
 class SisDbError(Exception):
     def __init__(self, value):
@@ -27,7 +27,7 @@ class SisDb(object):
     def __init__(self, client, opts=None):
         self.client = client
         if self.client.version < 1.1:
-            self.client.version = 1.1
+            raise SisDbError("API Version must be 1.1 or higher.")
         self._schemas = { }
         if client is not None:
             self.refresh(opts)
