@@ -84,7 +84,12 @@ class BaseSchema(object):
             for key in cloned_dict['_sis'].keys():
                     if key[0] == '_':
                         cloned_dict['_sis'].pop(key)
-        return self.__class__(data=cloned_dict)
+        clone = self.__class__(data=cloned_dict)
+        # need to iterate so fields are converted
+        # properly
+        for k in cloned_dict.keys():
+            getattr(clone, k)
+        return clone
 
     def _convert_value(self, val):
         if isinstance(val, BaseSchema):
@@ -192,15 +197,16 @@ class SisSchema(BaseSchema):
     def find_one(cls, q):
         return query.Query(cls.db.client.entities(cls.descriptor['name']), cls).find_one(q)
 
-    # from http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python
-    def chunks(l, n):
-        """ Yield successive n-sized chunks from l.
-        """
-        for i in xrange(0, len(l), n):
-            yield l[i:i+n]
-
     @classmethod
     def bulk_delete(cls, items):
+        # from http://stackoverflow.com/questions/312443/how-do-you-split-a-list-into-evenly-sized-chunks-in-python
+        def chunks(l, n):
+            """ Yield successive n-sized chunks from l.
+            """
+            for i in xrange(0, len(l), n):
+                yield l[i:i+n]
+        #end chunks
+
         # build the $in query
         ids = map(lambda i: i._id, items)
         if len(ids) == 0:
