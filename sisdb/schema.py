@@ -154,9 +154,9 @@ class SisSchema(BaseSchema):
 
             if '_id' in self._data:
                 # update
-                self._data = self.endpoint.update(self._data['_id'], save_data)
+                self._data = self.endpoint.update(self._data['_id'], save_data)._result
             else:
-                self._data = self.endpoint.create(save_data)
+                self._data = self.endpoint.create(save_data)._result
 
             self._changed.clear()
         return self
