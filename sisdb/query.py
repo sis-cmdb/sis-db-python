@@ -30,6 +30,7 @@ class Query(object):
         self._result = None
         self._count = -1
         self._is_all = False
+        self._populate = True
 
     def _clear_cached_result(self):
         self._result = None
@@ -77,6 +78,7 @@ class Query(object):
         self.query_obj = None
         self._limit = None
         self._offset = None
+        self._populate = None
         self._clear_cached_result()
         return self
 
@@ -90,6 +92,11 @@ class Query(object):
         self._clear_cached_result()
         return self;
 
+    def populate(self, pop):
+        self._populate = pop
+        self._clear_cached_result()
+        return self
+
     def __iter__(self):
         return iter(self.all_items())
 
@@ -99,7 +106,7 @@ class Query(object):
     def __getitem__(self, x):
         if self.__len__() < x:
             raise IndexError("Index out of range")
-        return self.all_items()[x] 
+        return self.all_items()[x]
 
     def count(self):
         if self._count != -1:
@@ -122,6 +129,10 @@ class Query(object):
 
         if self.sort_list:
             q['sort'] = ','.join(self.sort_list)
+
+        if not self._populate:
+            q['populate'] = False
+
 
         items = self.endpoint.fetch_all(q)
         self._is_all = True
@@ -174,6 +185,8 @@ class Query(object):
             q['limit'] = self._limit
         if self._offset:
             q['offset'] = self._offset
+        if not self._populate:
+            q['populate'] = False
 
         resp = self.endpoint.fetch_page(q)
         self._count = resp._meta.total_count
