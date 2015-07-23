@@ -106,5 +106,4 @@ samples = samples.all_items()
 
 # Stuff that's broken / TODO
 
-- handle object ID refs and convert to schema instance object
 - client side validation before sending to server
